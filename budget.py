@@ -73,5 +73,46 @@ class Category:
 		return string
 
 
+def get_expenses(categories):
+	expenses = []
+
+	for category in categories:
+		expense = 0
+		for transaction in category.ledger:
+			if transaction["amount"] < 0:
+				expense -= transaction["amount"]
+		expenses.append(expense)
+	return expenses
+
+
+def get_percentages(categories):
+	expenses = get_expenses(categories)
+	return [expense / sum(expenses) * 100 for expense in expenses]
+
+
 def create_spend_chart(categories):
-	return ""
+	percentages = get_percentages(categories)
+
+	text = "Percentage spent by category\n"
+	for i in range(100, -1, -10):
+		number = " " * (3 - len(str(i))) + str(i)
+		text += f"{number}| "
+		for j in range(len(categories)):
+			text += "o  " if percentages[j] >= i else "   "
+		text += "\n"
+
+	total_dashes = 1 + len(categories) * 3
+	text += "    " + "-" * total_dashes + "\n"
+
+	max_len = max([len(category.name) for category in categories])
+
+	for i in range(max_len):
+		text += "     "
+		for word in [category.name for category in categories]:
+			try:
+				text += word[i] + "  "
+			except IndexError:
+				text += "   "
+		text += '\n'
+
+	return text[:-1]
